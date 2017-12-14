@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class Scraper {
 
-    final static Logger logger = LoggerFactory.getLogger(Scraper.class);
+    static final Logger logger = LoggerFactory.getLogger(Scraper.class);
 
     String scrapeUrl;
 
@@ -19,17 +19,19 @@ public class Scraper {
 
     public String scrape() throws IOException {
         logger.debug("Start Scraping");
-        logger.debug("url: " + this.scrapeUrl);
+        logger.debug("url: {}", this.scrapeUrl);
 
         URL url = new URL(this.scrapeUrl);
         Scanner scan = new Scanner(url.openStream());
 
-        String content = new String();
-        while (scan.hasNext())
-            content += scan.nextLine();
+        StringBuilder bld = new StringBuilder();
+        while (scan.hasNext()) {
+            bld.append(scan.nextLine());
+        }
+        String content = bld.toString();
         scan.close();
 
-        logger.debug("scraping result: " + content);
+        logger.debug("scraping result: {}", content);
         logger.debug("scraping stopped");
 
         return content;

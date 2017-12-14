@@ -5,11 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Properties;
 
 public class CoinScraper {
 
-    final static Logger logger = LoggerFactory.getLogger(CoinScraper.class);
+    static final Logger logger = LoggerFactory.getLogger(CoinScraper.class);
 
     private Properties properties;
 
@@ -23,12 +24,22 @@ public class CoinScraper {
         logger.debug("Coinscraper Started");
 
         this.loadProperties();
+        DatabaseService databaseService = new DatabaseService(this.properties.getProperty("database.url"), this.properties.getProperty("database.user"), this.properties.getProperty("database.password"), this.properties.getProperty("database.name"));
+
         Scraper scraper = new Scraper(this.properties.getProperty("scrapeUrl"));
-        String result;
+        String scraperResult = null;
         try {
-            result = scraper.scrape();
+            scraperResult = scraper.scrape();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Exception", e);
+        }
+        Map<String, CoinData> dataMap = CoinDataService.createList(scraperResult);
+
+        String[] coins = properties.getProperty("coins").split(",");
+
+        for (String coin : coins) {
+            logger.debug(coin);
+            databaseService.addCointoDatabase(dataMap.get(coin));
         }
     }
 
@@ -42,13 +53,13 @@ public class CoinScraper {
             this.properties.load(input);
             logger.debug("properties loaded");
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("IOException", e);
         } finally {
             if (input != null) {
                 try {
                     input.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("IOException", e);
                 }
             }
         }
